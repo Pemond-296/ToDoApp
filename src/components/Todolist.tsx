@@ -32,8 +32,8 @@ const Container = styled.div`
     width: 100%;
     text-align: center;
   }
-  @media(max-width: 1200px){
+  /* @media(max-width: 1200px){
     width: 70%;
-  }
+  } */
 `
 

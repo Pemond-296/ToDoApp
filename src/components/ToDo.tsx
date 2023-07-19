@@ -9,18 +9,26 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete'
 import EditIcon from '@mui/icons-material/Edit'
 
-import { AddToDo } from "./AddToDo"
-import { EditToDo } from "./EditToDo"
+import { ActionToDo } from "./ActionToDo"
+
+type task = {
+    name: string;
+    priority: number;
+    start: string;
+    end: string;
+    id: number;
+    completed: boolean;
+}
 
 export const ToDo: React.FC = () => {
     const [secondary, setSecondary] = useState(false);
-    const [tasks, setTask] = useState<any>(() => {
+    const [tasks, setTask] = useState<task[]>(() => {
         const storage = JSON.parse(localStorage.getItem('todo') || "[]");
         return storage
     })
 
     const handleDone = (id: number) => {
-        setTask((prevTasks: any[]) => {
+        setTask((prevTasks: task[]) => {
             const index = prevTasks.findIndex((todo) => todo.id === id);
             if (index !== -1) {
                 const newTasks = [...prevTasks];
@@ -33,9 +41,8 @@ export const ToDo: React.FC = () => {
         });
     };
 
-
     const handleDelete = (id: number) => {
-        setTask((prevTasks: any[]) => {
+        setTask((prevTasks: task[]) => {
             const index = prevTasks.findIndex((todo) => todo.id === id);
             if (index !== -1) {
                 const newTasks = [...prevTasks];
@@ -48,9 +55,19 @@ export const ToDo: React.FC = () => {
         })
     }
 
+    // Option to use Action
+    const add = 1;
+    const edit = 2;
+    const [action, setAction] = useState<number>(0)
+
     const [showAddToDo, setShowAddToDo] = useState(false);
-    const updateTasks = (newTask: any) => {
-        setTask((prevTasks: any[]) => {
+    const handleAdd = () => {
+        setAction(add)
+        setShowAddToDo(true)
+        setShowEditToDo(false)
+    }
+    const updateTasks = (newTask: task) => {
+        setTask((prevTasks: task[]) => {
             const updatedTasks = [...prevTasks, newTask];
             updatedTasks.sort((a, b) => (a.priority >= b.priority) ? 1 : -1)
             const jsonTasks = JSON.stringify(updatedTasks);
@@ -60,14 +77,17 @@ export const ToDo: React.FC = () => {
         setShowAddToDo(false)
     };
 
+    //Edit Logic
     const [showEditToDo, setShowEditToDo] = useState(false)
-    const [editData, setEditDaTa] = useState<any>()
-    const handleEdit = (todo: any) => {
+    const [editData, setEditDaTa] = useState<task>()
+    const handleEdit = (todo: task) => {
+        setAction(edit)
         setEditDaTa(todo)
         setShowEditToDo(true)
+        setShowAddToDo(false)
     }
-    const updateToDo = (todo: any) => {
-        setTask((prevTasks: any[]) => {
+    const updateToDo = (todo: task) => {
+        setTask((prevTasks: task[]) => {
             const index = prevTasks.findIndex((task) => task.id === todo.id)
             prevTasks[index] = todo
             const updatedTasks = [...prevTasks]
@@ -86,10 +106,12 @@ export const ToDo: React.FC = () => {
         <ContainerCSS>
             {showEditToDo &&
             <div className="edit_screen">
-                <EditToDo
-                    dataToDo={editData}
+                <ActionToDo
+                    updateTasks={updateTasks}
+                    dataToDo={editData as task & { id: number; completed: boolean }}
                     updateToDo={updateToDo}
                     onCancel = {handleCancel}
+                    action = {action}
                 />
             </div>
             }
@@ -101,12 +123,12 @@ export const ToDo: React.FC = () => {
                         component="div"
                         classes="padding"
                     >
-                        Todo Application
+                        Todo App
                     </Typography>
                     <List
                         classes="list-group"
                     >
-                        {tasks?.map((todo: any, index: number) => (
+                        {tasks?.map((todo: task, index: number) => (
                             <>
                                 <ListItem
                                     key={index}
@@ -154,7 +176,7 @@ export const ToDo: React.FC = () => {
             </Container>
             <hr />
             {!showAddToDo ? (
-                <li className="add_task" onClick={() => setShowAddToDo(true)}>
+                <li className="add_task" onClick={() => handleAdd()}>
                     <button >
                         <span className="icon_add">
                             <svg width="24" height="20">
@@ -165,7 +187,13 @@ export const ToDo: React.FC = () => {
                     </button>
                 </li>
             ) : (
-                <AddToDo updateTasks={updateTasks} />
+                <ActionToDo 
+                    updateTasks={updateTasks} 
+                    dataToDo={editData as task & { id: number; completed: boolean }}
+                    updateToDo={updateToDo}
+                    onCancel = {handleCancel}
+                    action = {action}
+                />
             )}
 
         </ContainerCSS>
@@ -177,6 +205,7 @@ const ContainerCSS = styled(Container)`
     justify-content: center;
     align-items: center;
     position: relative;
+
     .blur{
         filter: blur(5px);
         pointer-events: none;
@@ -218,7 +247,7 @@ const ContainerCSS = styled(Container)`
         border: 3px solid red;
     }
     #priority-2{
-        border: 3px solid orangered;
+        border: 3px solid orange;
     }
     #priority-3{
         border: 3px solid blue;
@@ -248,10 +277,26 @@ const ContainerCSS = styled(Container)`
         }
     }
     .edit_screen{
+        background-color: #f7fbfc;
         z-index: 999;
-        display: block;
+        display: flex;
         position: absolute;
         top: 30%;
-        left: 20%;
+        left: 19%;
+        border: 2px solid #b2bec3;
+        padding: 30px 0px;
+        border-radius: 16px;
+        box-shadow: #636e72 2px 0px 12px 0px;
+        z-index: 999;
+    }
+    @media(max-width: 767px) {
+        .edit_screen{
+            left: 4%;
+        }
+    }
+    @media(max-width: 1217px) {
+        .edit_screen{
+            left: 3%;
+        }
     }
 `
